@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>测试页面</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .success { color: green; font-weight: bold; }
+        .links { margin-top: 20px; }
+        .links a { display: block; margin: 5px 0; }
+    </style>
+</head>
+<body>
+<h1>Spring Boot + Thymeleaf 测试</h1>
+<p class="success" th:text="${message}">默认消息</p>
+<p>时间戳：<span th:text="${timestamp}">时间</span></p>
+
+<div class="links">
+    <h2>测试链接：</h2>
+    <a href="/test-login">直接访问登录模板</a>
+    <a href="/test-blog">直接访问博客列表模板</a>
+    <a href="/login">登录页面（通过控制器）</a>
+    <a href="/register">注册页面</a>
+    <a href="/h2-console">H2数据库控制台</a>
+    <a href="/api/user/status">检查登录状态API</a>
+</div>
+</body>
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>博客编辑页</title>
+
+    <!-- 使用 Thymeleaf 引用静态资源 -->
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/blog_edit.css}">
+
+    <!-- 引入 editor.md 的依赖 -->
+    <link rel="stylesheet" th:href="@{/editor.md/css/editormd.min.css}" />
+    <script th:src="@{/js/jquery.min.js}"></script>
+    <!-- editormd 的 JS 文件应该放在最后 -->
+</head>
+<body>
+<!-- 这是导航栏 -->
+<div class="nav">
+    <img th:src="@{/image/wallhaven-72keg9.jpg}" alt="logo">
+    <span>我的博客系统</span>
+    <!-- 空白元素, 用来占位置 -->
+    <div class="spacer"></div>
+    <a th:href="@{/blog/list}">主页</a>
+    <a th:href="@{/blog/edit}">写博客</a>
+    <a th:href="@{/logout}">注销</a>
+</div>
+
+<!-- 包裹整个博客编辑页内容的顶级容器 -->
+<div class="blog-edit-container">
+    <!-- 使用一个 action，在 Controller 中判断是创建还是更新 -->
+    <form th:action="@{/blog/save}" method="post" style="height:100%">
+        <!-- 如果是编辑模式，传递 blogId -->
+        <input th:if="${isEdit}" type="hidden" name="blogId" th:value="${blog.blogId}">
+
+        <div class="title">
+            <input type="text" placeholder="在此处输入标题"
+                   name="title" id="title" th:value="${blog.title}" required>
+            <button type="submit" id="submit">
+                <span th:text="${isEdit} ? '更新文章' : '发布文章'"></span>
+            </button>
+        </div>
+
+        <!-- 放置 md 编辑器 -->
+        <div id="editor">
+            <textarea name="content" style="display:none" th:text="${blog.content}"></textarea>
+        </div>
+    </form>
+</div>
+
+<!-- 将 editormd 的依赖 JS 放在 body 最后 -->
+<script th:src="@{/editor.md/lib/marked.min.js}"></script>
+<script th:src="@{/editor.md/lib/prettify.min.js}"></script>
+<script th:src="@{/editor.md/lib/raphael.min.js}"></script>
+<script th:src="@{/editor.md/lib/underscore.min.js}"></script>
+<script th:src="@{/editor.md/lib/sequence-diagram.min.js}"></script>
+<script th:src="@{/editor.md/lib/flowchart.min.js}"></script>
+<script th:src="@{/editor.md/lib/jquery.flowchart.min.js}"></script>
+<script th:src="@{/editor.md/editormd.js}"></script>
+
+<script>
+    // 等待页面完全加载后再初始化编辑器
+    $(document).ready(function() {
+        console.log("开始初始化 editormd...");
+
+        // 获取博客内容
+        var blogContent = "";
+        var textarea = document.querySelector('textarea[name="content"]');
+        if (textarea && textarea.value) {
+            blogContent = textarea.value;
+        } else {
+            blogContent = "# 在这里写下一篇博客\n\n## 开始写作吧！";
+        }
+
+        console.log("博客内容长度:", blogContent.length);
+
+        try {
+            // 初始化编辑器
+            var editor = editormd("editor", {
+                width: "100%",
+                height: "calc(100vh - 150px)", // 更可靠的高度计算
+                path: "/editor.md/lib/",
+                theme: "default",
+                previewTheme: "default",
+                editorTheme: "default",
+                markdown: blogContent,
+                codeFold: true,
+                searchReplace: true,
+                toolbar: true,
+                emoji: true,
+                taskList: true,
+                tex: true,
+                readOnly: false,
+                tocm: true,
+                watch: true,
+                previewCodeHighlight: true,
+                saveHTMLToTextarea: true,
+                htmlDecode: "style,script,iframe|on*",
+                toolbarIcons: function() {
+                    return editormd.toolbarModes["full"];
+                },
+                toolbarIconsClass: {
+                    undo: "fa fa-undo",
+                    redo: "fa fa-repeat"
+                },
+                lang: {
+                    name: 'zh-cn',
+                    toolbar: {
+                        undo: "撤销（Ctrl+Z）",
+                        redo: "重做（Ctrl+Y）"
+                    }
+                },
+                onload: function() {
+                    console.log("编辑器加载完成");
+                    // 如果内容为空，设置默认内容
+                    if (!blogContent || blogContent.trim() === '') {
+                        this.setMarkdown("# 在这里写下一篇博客\n\n## 开始写作吧！");
+                    }
+                }
+            });
+
+            if (editor) {
+                console.log("编辑器初始化成功");
+            } else {
+                console.error("编辑器初始化失败");
+            }
+        } catch (error) {
+            console.error("初始化编辑器时出错:", error);
+            // 如果编辑器初始化失败，显示一个备用的 textarea
+            document.getElementById('editor').innerHTML =
+                '<textarea name="content" style="width:100%; height:500px; font-family: monospace;">' +
+                blogContent +
+                '</textarea>';
+        }
+    });
+
+    // 表单提交前的验证
+    document.querySelector('form').addEventListener('submit', function(event) {
+        var title = document.querySelector('input[name="title"]').value.trim();
+        var content = document.querySelector('textarea[name="content"]').value.trim();
+
+        if (!title) {
+            alert('请输入博客标题！');
+            event.preventDefault();
+            return false;
+        }
+
+        if (!content) {
+            alert('请输入博客内容！');
+            event.preventDefault();
+            return false;
+        }
+
+        return true;
+    });
+</script>
+
+<style>
+    /* 确保编辑区域有正确的高度 */
+    .blog-edit-container {
+        position: relative;
+        height: calc(100vh - 100px);
+    }
+
+    #editor {
+        width: 100%;
+        height: calc(100% - 60px);
+    }
+
+    /* 编辑器样式调整 */
+    .editormd {
+        height: 100% !important;
+    }
+
+    /* 如果编辑器加载失败，备用样式 */
+    textarea[name="content"] {
+        width: 100%;
+        height: 500px;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        font-size: 14px;
+        line-height: 1.6;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        resize: vertical;
+    }
+</style>
+</body>
+</html>

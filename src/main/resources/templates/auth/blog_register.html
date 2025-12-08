@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册页面</title>
+    <!-- 修改1: 资源路径 -->
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/blog_register.css}">
+</head>
+<body>
+<div class="nav">
+    <!-- 修改2: 图片路径 -->
+    <img th:src="@{/image/wallhaven-72keg9.jpg}" alt="博客背景">
+    <span>我的博客系统</span>
+    <div class="spacer"></div>
+    <!-- 修改3: 页面链接 -->
+    <a th:href="@{/blog/list}">主页</a>
+    <a th:href="@{/blog/edit}">写博客</a>
+    <a th:href="@{/login}">登录</a>
+</div>
+
+<div class="login-container">
+    <!-- 修改4: 表单提交地址 -->
+    <form th:action="@{/register}" method="post">
+        <div class="login-dialog">
+            <h3>注册</h3>
+            <!-- 修改5: 添加错误信息显示 -->
+            <div th:if="${error}" class="error-message" th:text="${error}"></div>
+
+            <div class="row">
+                <span>请输入用户名</span>
+                <input type="text" id="username" name="username"
+                       th:value="${username}" placeholder="输入用户名" required>
+            </div>
+            <div class="row">
+                <span>密码</span>
+                <input type="password" id="password" name="password"
+                       placeholder="输入密码" required>
+            </div>
+            <div class="row">
+                <span>确认密码</span>
+                <!-- 修改6: 修正id重复问题，原两个都是id="password" -->
+                <input type="password" id="confirmPassword" name="confirmPassword"
+                       placeholder="确认密码" required>
+            </div>
+            <div class="row">
+                <button type="submit">注册</button>
+            </div>
+
+            <div class="row login-link">
+                已有账号？<a th:href="@{/login}">立即登录</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- 可选：添加一些简单的样式和验证脚本 -->
+<style>
+    .error-message {
+        color: red;
+        background-color: #ffe6e6;
+        padding: 8px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+    .login-link {
+        text-align: center;
+        margin-top: 15px;
+        font-size: 14px;
+    }
+</style>
+
+<!-- 简单的密码一致性验证（可选） -->
+<script>
+    document.querySelector('form').addEventListener('submit', function(event) {
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        if (password !== confirmPassword) {
+            alert('两次输入的密码不一致！');
+            event.preventDefault(); // 阻止表单提交
+            return false;
+        }
+
+        // 还可以添加更多验证逻辑
+        if (password.length < 6) {
+            alert('密码长度至少6位！');
+            event.preventDefault();
+            return false;
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 使用 Thymeleaf 动态设置标题 -->
+    <title th:text="${blog != null ? blog.title : '博客详情页'}">博客详情页</title>
+
+    <!-- 使用 Thymeleaf 引用静态资源 -->
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/blog_detail.css}">
+
+    <!-- 引入 editor.md 的依赖 -->
+    <link rel="stylesheet" th:href="@{/editor.md/css/editormd.min.css}" />
+    <script th:src="@{/js/jquery.min.js}"></script>
+    <script th:src="@{/editor.md/lib/marked.min.js}"></script>
+    <script th:src="@{/editor.md/lib/prettify.min.js}"></script>
+    <script th:src="@{/editor.md/editormd.js}"></script>
+</head>
+<body>
+<!-- 导航栏 -->
+<div class="nav">
+    <!-- 使用 Thymeleaf 引用图片 -->
+    <img th:src="@{/image/head.jpg}" alt="logo">
+    <span>我的博客系统</span>
+    <div class="spacer"></div>
+    <!-- 使用 Thymeleaf 设置链接 -->
+    <a th:href="@{/blog/list}">主页</a>
+    <a th:href="@{/blog/edit}">写博客</a>
+    <a th:href="@{/logout}">注销</a>
+
+    <!-- 如果当前用户是作者，显示删除按钮 -->
+    <a th:if="${isAuthor}" th:href="@{/blog/delete(blogId=${blog.blogId})}"
+       onclick="return confirm('确定删除这篇博客吗？')">删除</a>
+</div>
+
+<div class="container">
+    <!-- 左侧个人信息 -->
+    <div class="left">
+        <div class="card">
+            <!-- 用户头像 -->
+            <img th:src="@{/image/gamegirl.jpg}" alt="用户头像">
+
+            <!-- 作者用户名 -->
+            <h3 th:text="${author != null ? author.username : '未知用户'}"></h3>
+
+            <a href="https://gitee.com/big-white-rice">github 地址</a>
+
+            <div class="counter">
+                <span>文章</span>
+                <span>分类</span>
+            </div>
+            <div class="counter">
+                <!-- 显示作者的文章数量 -->
+                <span th:text="${authorBlogCount != null ? authorBlogCount : 0}">0</span>
+                <span>1</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 右侧内容详情 -->
+    <div class="right">
+        <div class="blog-content">
+            <!-- 博客标题 -->
+            <h3 th:text="${blog.title}">博客标题</h3>
+
+            <!-- 博客发布时间 -->
+            <div class="date" th:text="${blog.postTime != null ? #temporals.format(blog.postTime, 'yyyy-MM-dd HH:mm:ss') : '未知时间'}">
+                发布时间
+            </div>
+
+            <!-- 博客正文内容 -->
+            <div id="content" style="opacity: 80%">
+                <!-- 这里会通过 JavaScript 渲染 markdown -->
+                <textarea style="display:none;" th:text="${blog.content}"></textarea>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 页面加载完成后初始化编辑器
+    $(document).ready(function() {
+        // 获取博客内容
+        var markdownContent = document.querySelector('textarea').value;
+
+        if (markdownContent && markdownContent.trim() !== '') {
+            // 渲染 markdown 为 HTML
+            editormd.markdownToHTML('content', {
+                markdown: markdownContent,
+                // 可选配置
+                htmlDecode: "style,script,iframe",
+                emoji: true,
+                taskList: true,
+                tex: true,
+                flowChart: true,
+                sequenceDiagram: true,
+                path: "/editor.md/lib/"
+            });
+        } else {
+            // 如果没有内容，显示提示
+            document.getElementById('content').innerHTML = '<p style="color: #999; text-align: center;">暂无内容</p>';
+        }
+
+        // 检查登录状态
+        checkLoginStatus();
+    });
+
+    // 检查登录状态
+    function checkLoginStatus() {
+        // 可以在这里添加一些权限检查逻辑
+        console.log('页面加载完成，博客详情页');
+
+        // 调试信息
+        console.log('博客ID:', [[${blog.blogId}]]);
+        console.log('博客标题:', [[${blog.title}]]);
+        console.log('作者ID:', [[${blog.userId}]]);
+        console.log('当前用户是作者:', [[${isAuthor}]]);
+    }
+
+    // 删除博客确认
+    function confirmDelete(blogId) {
+        if (confirm('确定要删除这篇博客吗？')) {
+            window.location.href = '/blog/delete?blogId=' + blogId;
+        }
+        return false;
+    }
+</script>
+
+<style>
+    /* 添加一些样式增强 */
+    .blog-content {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .blog-content h3 {
+        font-size: 28px;
+        margin-bottom: 15px;
+        color: #333;
+    }
+
+    .date {
+        color: #888;
+        font-size: 14px;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eee;
+    }
+
+    /* editor.md 样式调整 */
+    #content {
+        font-size: 16px;
+        line-height: 1.8;
+    }
+
+    #content h1, #content h2, #content h3 {
+        margin-top: 30px;
+        margin-bottom: 15px;
+    }
+
+    #content p {
+        margin-bottom: 15px;
+    }
+
+    #content pre {
+        background: #f6f8fa;
+        padding: 15px;
+        border-radius: 6px;
+        overflow-x: auto;
+    }
+
+    #content code {
+        background: #f6f8fa;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    }
+</style>
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>博客列表</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/blog_list.css}">
+</head>
+<body>
+<!-- 导航栏 -->
+<div class="nav">
+    <a th:href="@{/blog/list}">
+        <img th:src="@{/image/wallhaven-72keg9.jpg}" alt="博客系统Logo" id="主页">
+    </a>
+    <span>我的博客系统</span>
+    <div class="spacer"></div>
+    <a th:href="@{/blog/list}">主页</a>
+    <a th:href="@{/blog/edit}">写博客</a>
+    <a th:href="@{/logout}">注销</a>
+</div>
+
+<!-- 页面版心 -->
+<div class="container">
+    <!-- 左侧个人信息 -->
+    <div class="left">
+        <div class="card">
+            <img th:src="@{/image/gamegirl.jpg}" alt="用户头像">
+            <h3>
+                <span th:if="${session.user != null}" th:text="${session.user.username}">用户名</span>
+                <span th:if="${session.user == null}">未登录</span>
+            </h3>
+            <a href="https://gitee.com/big-white-rice">gitee 地址</a>
+            <div class="counter">
+                <span>文章</span>
+                <span>分类</span>
+            </div>
+            <div class="counter">
+                <span th:text="${blogCount != null ? blogCount : '0'}">0</span>
+                <span>1</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 右侧内容详情 -->
+    <div class="right">
+        <!-- 修改1：移除th:object，直接使用blog变量 -->
+        <div class="blog" th:each="blog : ${blogs}">
+            <!-- 博客标题 -->
+            <div class="title" th:text="${blog.title}">
+                我的第一篇博客
+            </div>
+            <!-- 博客发布时间 -->
+            <div class="date" th:text="${blog.postTime != null ? #temporals.format(blog.postTime, 'yyyy-MM-dd HH:mm:ss') : '未知时间'}">
+                2022-05-05 20:52:00
+            </div>
+            <!-- 博客的摘要 -->
+            <div class="desc">
+                <!-- 显示内容的前150个字符作为摘要 -->
+                <span th:if="${#strings.length(blog.content) > 150}"
+                      th:text="${#strings.substring(blog.content, 0, 150)} + '...'">
+                    从今天起, 我要认真敲代码. Lorem ipsum dolor sit amet...
+                </span>
+                <span th:if="${#strings.length(blog.content) <= 150}"
+                      th:text="${blog.content}">
+                    从今天起, 我要认真敲代码.
+                </span>
+            </div>
+            <!-- 修改2：修正链接语法 -->
+            <a th:href="@{/blog/view/{id}(id=${blog.blogId})}">查看全文 &gt;&gt; </a>
+
+            <!-- 修改3：修正权限检查逻辑 -->
+            <div class="blog-actions"
+                 th:if="${session.user != null and session.user.userId == blog.userId}">
+                <form th:action="@{/blog/delete}" method="post" style="display:inline;">
+                    <input type="hidden" name="blogId" th:value="${blog.blogId}">
+                    <button type="submit" class="delete-btn"
+                            onclick="return confirm('确定删除这篇博客吗？')">删除</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 没有博客时的提示 -->
+        <div th:if="${#lists.isEmpty(blogs)}" class="no-blogs">
+            <p>还没有博客，<a th:href="@{/blog/edit}">开始写第一篇吧！</a></p>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/jquery.min.js}"></script>
+
+<script>
+    // 添加调试信息，查看每个博客的ID
+    document.addEventListener('DOMContentLoaded', function() {
+        // 获取所有博客链接，验证blogId
+        const blogLinks = document.querySelectorAll('a[href*="/blog/view/"]');
+        console.log('找到', blogLinks.length, '个博客链接:');
+        blogLinks.forEach((link, index) => {
+            console.log('博客', index + 1, '链接:', link.href);
+        });
+
+        // 检查博客列表数据
+        const blogDivs = document.querySelectorAll('.blog');
+        blogDivs.forEach((div, index) => {
+            console.log('博客', index + 1, 'HTML:', div.outerHTML);
+        });
+
+        setupBlogInteractions();
+    });
+
+    function setupBlogInteractions() {
+        const blogCards = document.querySelectorAll('.blog');
+        blogCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+            });
+            card.addEventListener('mouseleave', function() {
+                this.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
+            });
+        });
+    }
+</script>
+
+<style>
+    .blog-actions {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #eee;
+    }
+    .edit-btn, .delete-btn {
+        display: inline-block;
+        padding: 4px 12px;
+        margin-right: 8px;
+        font-size: 12px;
+        border-radius: 4px;
+        text-decoration: none;
+    }
+    .edit-btn {
+        color: #1890ff;
+        border: 1px solid #1890ff;
+        background: white;
+    }
+    .edit-btn:hover {
+        background: #e6f7ff;
+    }
+    .delete-btn {
+        color: #ff4d4f;
+        border: 1px solid #ff4d4f;
+        background: white;
+        cursor: pointer;
+    }
+    .delete-btn:hover {
+        background: #fff2f0;
+    }
+    .no-blogs {
+        text-align: center;
+        padding: 40px;
+        color: #999;
+        font-size: 16px;
+    }
+    .no-blogs a {
+        color: #1890ff;
+        text-decoration: none;
+    }
+    .no-blogs a:hover {
+        text-decoration: underline;
+    }
+
+    /* 调试样式，查看博客ID */
+    .blog-id-debug {
+        font-size: 10px;
+        color: #999;
+        margin-top: 5px;
+    }
+</style>
+</body>
+</html>

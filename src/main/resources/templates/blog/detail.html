@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title th:text="${blog.title ?: '博客详情页'}">博客详情页</title>
+
+  <!-- 修改1: 使用Thymeleaf表达式引用CSS -->
+  <link rel="stylesheet" th:href="@{/css/common.css}">
+  <link rel="stylesheet" th:href="@{/css/blog_detail.css}">
+
+  <!-- 引入 editor.md 的依赖（用于Markdown渲染） -->
+  <link rel="stylesheet" th:href="@{/editor.md/css/editormd.min.css}" />
+</head>
+<body>
+<!-- 导航栏 -->
+<div class="nav">
+  <!-- 修改2: 使用Thymeleaf引用图片 -->
+  <img th:src="@{/image/head.jpg}" alt="博客系统Logo">
+  <span>我的博客系统</span>
+
+  <!-- 空白元素，用来占位置 -->
+  <div class="spacer"></div>
+
+  <!-- 修改3: 使用Thymeleaf链接表达式 -->
+  <a th:href="@{/blog/list}">主页</a>
+  <a th:href="@{/blog/edit}">写博客</a>
+
+  <!-- 修改4: 条件显示删除按钮（仅作者可见） -->
+  <a th:href="@{/logout}">注销</a>
+
+  <!-- 动态添加删除按钮（如果当前用户是作者） -->
+  <a th:if="${isAuthor}" th:href="@{'/blog/delete?blogId=' + ${blog.blogId}}"
+     style="color: #ff4d4f; margin-left: 15px;"
+     onclick="return confirm('确定要删除这篇博客吗？')">
+    删除
+  </a>
+</div>
+
+<!-- 页面版心 -->
+<div class="container">
+  <!-- 左侧个人信息 -->
+  <div class="left">
+    <div class="card">
+      <!-- 修改5: 作者头像 -->
+      <img th:src="@{/image/gamegirl.jpg}" alt="作者头像">
+
+      <!-- 修改6: 作者名称（动态显示） -->
+      <h3 th:text="${author?.username ?: '未登录'}">
+        作者名称
+      </h3>
+
+      <a href="https://gitee.com/big-white-rice">Gitee 地址</a>
+
+      <div class="counter">
+        <span>文章</span>
+        <span>分类</span>
+      </div>
+      <div class="counter">
+        <!-- 修改7: 动态显示作者文章数量 -->
+        <span th:text="${authorBlogCount ?: '0'}">999</span>
+        <span>1</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右侧内容详情 -->
+  <div class="right">
+    <!-- 博客内容区域 -->
+    <div class="blog-content">
+      <!-- 修改8: 动态显示博客标题 -->
+      <h3 th:text="${blog.title}">
+        博客标题
+      </h3>
+
+      <!-- 修改9: 动态显示发布时间 -->
+      <div class="date" th:text="${blog.formattedPostTime}">
+        2022-05-05 20:52:00
+      </div>
+
+      <!-- 修改10: 博客正文内容（Markdown渲染） -->
+      <div id="content" style="opacity: 80%">
+        <!-- 这里会通过JavaScript渲染Markdown -->
+        <!-- 也可以在后端转换为HTML后直接显示： -->
+        <!-- <div th:utext="${blog.contentHtml}"></div> -->
+      </div>
+
+      <!-- 操作按钮区域 -->
+      <div class="blog-actions" th:if="${session.user != null}">
+        <!-- 修改11: 编辑按钮（仅作者可见） -->
+        <a th:if="${isAuthor}"
+           th:href="@{/blog/edit/{id}(id=${blog.blogId})}"
+           class="edit-btn">
+          编辑
+        </a>
+
+        <!-- 返回列表按钮 -->
+        <a th:href="@{/blog/list}" class="back-btn">
+          ← 返回列表
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 修改12: 使用Thymeleaf引用JavaScript库 -->
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/editor.md/lib/marked.min.js}"></script>
+<script th:src="@{/editor.md/lib/prettify.min.js}"></script>
+<script th:src="@{/editor.md/editormd.js}"></script>
+
+<script>
+  // 页面加载完成后执行
+  document.addEventListener('DOMContentLoaded', function() {
+    // 方案A：使用Thymeleaf传递的Markdown内容渲染
+    const markdownContent = `[[${blog.content}]]`;
+
+    if (markdownContent && markdownContent !== 'null') {
+      // 使用editor.md渲染Markdown
+      editormd.markdownToHTML('content', {
+        markdown: markdownContent,
+        htmlDecode: "style,script,iframe",  // 可以解析HTML标签
+        toc: true,                          // 显示目录
+        tocm: true,
+        tocDropdown: true,
+        tex: true,                          // 支持科学公式
+        flowChart: true,                    // 支持流程图
+        sequenceDiagram: true,              // 支持序列图
+        codeFold: true
+      });
+    } else {
+      // 如果没有内容，显示提示
+      document.getElementById('content').innerHTML =
+              '<p class="no-content">博客内容为空</p>';
+    }
+
+    // 检查登录状态
+    checkLoginStatus();
+  });
+
+  // 检查登录状态
+  function checkLoginStatus() {
+    // 如果用户未登录且当前页面需要登录权限，可以跳转到登录页
+    // 这里可以根据需要实现
+    const isLoggedIn = `[[${session.user != null}]]` === 'true';
+
+    if (!isLoggedIn) {
+      console.log('用户未登录');
+      // 可以在这里添加跳转逻辑，但原项目是在详情页检查登录的
+      // 所以这里保留原逻辑：允许查看，但某些功能受限
+    }
+  }
+
+  // 获取作者信息（备用方案，如果后端未传递足够信息）
+  function fetchAuthorInfo() {
+    const blogId = `[[${blog.blogId}]]`;
+
+    if (blogId && blogId !== 'null') {
+      fetch(`/api/authorInfo?blogId=${blogId}`)
+              .then(response => response.json())
+              .then(data => {
+                if (data.ok && data.author) {
+                  // 更新作者信息
+                  updateAuthorInfo(data.author);
+                }
+              })
+              .catch(error => {
+                console.error('获取作者信息失败:', error);
+              });
+    }
+  }
+
+  // 更新作者信息
+  function updateAuthorInfo(author) {
+    const authorNameElement = document.querySelector('.card h3');
+    if (authorNameElement && author.username) {
+      authorNameElement.textContent = author.username;
+    }
+  }
+
+  // 获取作者博客数量
+  function fetchAuthorBlogCount() {
+    const blogId = `[[${blog.blogId}]]`;
+
+    if (blogId && blogId !== 'null') {
+      fetch(`/api/num?blogId=${blogId}`)
+              .then(response => response.text())
+              .then(count => {
+                // 更新文章数量显示
+                const countElement = document.querySelector('.counter span:first-child');
+                if (countElement && !isNaN(count)) {
+                  countElement.textContent = count;
+                }
+              })
+              .catch(error => {
+                console.error('获取博客数量失败:', error);
+              });
+    }
+  }
+</script>
+
+<!-- 添加样式 -->
+<style>
+  /* 博客操作按钮样式 */
+  .blog-actions {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+    display: flex;
+    gap: 15px;
+  }
+
+  .edit-btn, .back-btn {
+    display: inline-block;
+    padding: 8px 20px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 14px;
+    transition: all 0.3s;
+  }
+
+  .edit-btn {
+    color: #1890ff;
+    border: 1px solid #1890ff;
+    background: white;
+  }
+
+  .edit-btn:hover {
+    background: #e6f7ff;
+    border-color: #40a9ff;
+  }
+
+  .back-btn {
+    color: #666;
+    border: 1px solid #d9d9d9;
+    background: #fafafa;
+  }
+
+  .back-btn:hover {
+    background: #f5f5f5;
+    border-color: #bfbfbf;
+  }
+
+  /* 无内容提示 */
+  .no-content {
+    text-align: center;
+    color: #999;
+    font-style: italic;
+    padding: 40px 0;
+  }
+
+  /* 响应式调整 */
+  @media (max-width: 768px) {
+    .container {
+      flex-direction: column;
+    }
+
+    .left, .right {
+      width: 100%;
+    }
+
+    .blog-actions {
+      flex-direction: column;
+    }
+
+    .edit-btn, .back-btn {
+      width: 100%;
+      text-align: center;
+    }
+  }
+</style>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录页面</title>
+    <!-- 修改1: 使用Thymeleaf的资源表达式 -->
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/blog_login.css}">
+</head>
+<body>
+<!-- 这是导航栏 -->
+<div class="nav">
+    <!-- 修改2: 图片路径 -->
+    <img th:src="@{/image/head.jpg}" alt="博客logo">
+    <span>我的博客系统</span>
+    <!-- 空白元素, 用来占位置 -->
+    <div class="spacer"></div>
+    <!-- 修改3: 页面链接 -->
+    <a th:href="@{/blog/list}">主页</a>
+    <a th:href="@{/blog/edit}">写博客</a>
+    <!-- 注册链接可以加上 -->
+    <a th:href="@{/register}">注册</a>
+</div>
+
+<div class="login-container">
+    <!-- 修改4: 表单提交地址 -->
+    <form th:action="@{/login}" method="post">
+        <div class="login-dialog">
+            <h3>登录</h3>
+            <!-- 修改5: 添加错误信息显示 -->
+            <div th:if="${error}" class="error-message" th:text="${error}"></div>
+
+            <div class="row">
+                <span>用户名</span>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="row">
+                <span>密码</span>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div class="row">
+                <button type="submit">提交</button>
+            </div>
+
+            <div class="row register-link">
+                还没有账号？<a th:href="@{/register}">立即注册</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- 可选：添加一些简单的样式 -->
+<style>
+    .error-message {
+        color: red;
+        background-color: #ffe6e6;
+        padding: 8px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+    .register-link {
+        text-align: center;
+        margin-top: 15px;
+        font-size: 14px;
+    }
+</style>
+</body>
+</html>

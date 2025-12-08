@@ -1,0 +1,74 @@
+html, body {
+    height: 100%;
+}
+
+body {
+    background-image: url(../image/wallhaven-dpzjzg.jpg);
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: cover;
+}
+.login-container {
+    width: 100%;
+    height: calc(100% - 50px);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-dialog {
+    width: 400px;
+    height: 400px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 10px;
+}
+
+.login-dialog h3 {
+    text-align: center;
+    padding: 50px 0;
+}
+
+.login-dialog .row {
+    height: 50px;
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-dialog .row span {
+    display: block;
+    width: 120px;
+    font-weight: 700;
+}
+
+#username, #password {
+    width: 230px;
+    height: 40px;
+    font-size: 22px;
+    line-height: 40px;
+    padding-left: 10px;
+    border-radius: 10px;
+
+    border: none;
+
+    outline: none;
+}
+
+.row button {
+    width: 300px;
+    height: 50px;
+    border-radius: 10px;
+    color: white;
+    background-color: rgb(210, 19, 19);
+    border: none;
+    outline: none;
+
+    margin-top: 30px;
+}
+
+.row button:active {
+    background-color: #666;
+}

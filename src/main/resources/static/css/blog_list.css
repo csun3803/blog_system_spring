@@ -1,0 +1,54 @@
+html, body {
+    height: 100%;
+}
+
+body {
+    background-image: url(../image/wallhaven-k7g117.jpg);
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: cover;
+}
+/* 博客列表相关样式 */
+.blog {
+    width: 100%;
+    padding: 20px;
+}
+
+.blog .title {
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+    padding: 10px 0;
+}
+
+.blog .date {
+    text-align: center;
+    color: rgb(201, 29, 52);
+    padding: 10px 0;
+}
+
+.blog .desc {
+    text-indent: 2em;
+    background-color: rgba(134, 169, 139, 0.1);
+    color: rgb(55, 4, 4);
+}
+
+.blog a {
+    display: block;
+    width: 140px;
+    height: 40px;
+    margin: 10px auto;
+    border: 2px black solid;
+
+    color: black;
+    line-height: 40px;
+    text-align: center;
+    text-decoration: none;
+
+    transition: all 0.5s;
+}
+
+.blog a:hover {
+    background: #333;
+    color: #fff;
+}
