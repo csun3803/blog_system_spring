@@ -201,12 +201,6 @@ public class BlogController {
         }
     }
 
-    // ========== 页面跳转（根据实际文件名调整） ==========
-
-    /**
-     * 博客列表页（HTML）
-     * 对应 blog_list.html
-     */
     @GetMapping("/list")
     public String blogListPage(Model model, HttpSession session, RedirectAttributes redirectAttributes) {
         // 检查登录状态
@@ -216,10 +210,8 @@ public class BlogController {
             return "redirect:/auth/blog_login";
         }
 
-        // 获取当前用户的所有博客
         List<Blog> blogs = blogService.getBlogsByUser(user.getUserId());
 
-        // 添加调试信息
         System.out.println("=== 当前用户博客列表调试信息 ===");
         System.out.println("当前用户ID: " + user.getUserId());
         System.out.println("博客数量: " + blogs.size());
@@ -232,61 +224,46 @@ public class BlogController {
 
         model.addAttribute("blogs", blogs);
 
-        // 获取当前用户的博客数量（用于左侧统计）
         Integer blogCount = blogService.getUserBlogCount(user.getUserId());
         model.addAttribute("blogCount", blogCount);
 
-        // 添加用户信息到model，方便模板使用
         model.addAttribute("currentUser", user);
 
         return "blog/blog_list";
     }
 
-    /**
-     * 博客详情页（HTML）
-     */
     @GetMapping("/view/{id}")
     public String viewBlog(@PathVariable Integer id, Model model, HttpSession session) {
-        // 获取博客详情
         System.out.println("DEBUG - 查看博客详情，接收的ID: " + id);
         Blog blog = blogService.getBlogById(id);
         if (blog == null) {
-            // 博客不存在，重定向到列表页
+
             return "redirect:/blog/list";
         }
 
-        // 获取作者信息
         User author = userService.selectById(blog.getUserId());
 
-        // 检查当前用户是否为作者
         boolean isAuthor = false;
         User currentUser = (User) session.getAttribute("user");
         if (currentUser != null && author != null) {
             isAuthor = currentUser.getUserId().equals(author.getUserId());
         }
 
-        // 获取作者的文章数量
         Integer authorBlogCount = blogService.getUserBlogCount(blog.getUserId());
 
-        // 添加到Model
         model.addAttribute("blog", blog);
         model.addAttribute("author", author);
         model.addAttribute("isAuthor", isAuthor);
         model.addAttribute("authorBlogCount", authorBlogCount);
 
-        return "blog/blog_detail";  // 修改这里：改为 "blog/blog_detail"
+        return "blog/blog_detail";
     }
 
-    // 替代原有的多个静态页面的URL映射
     @GetMapping("/detail/{id}")
     public String blogDetailPage(@PathVariable Integer id, Model model) {
         return viewBlog(id, model, null);
     }
 
-    /**
-     * 创建博客页面
-     */
-    // 修改创建博客页面
     @GetMapping("/edit")
     public String createBlogPage(Model model) {
         model.addAttribute("blog", new Blog());
@@ -294,7 +271,6 @@ public class BlogController {
         return "blog/blog_edit";
     }
 
-    // 修改编辑博客页面
     @GetMapping("/edit/{id}")
     public String editBlogPage(@PathVariable Integer id, Model model, HttpSession session) {
         User user = (User) session.getAttribute("user");
@@ -312,10 +288,6 @@ public class BlogController {
         }
     }
 
-    // 在 BlogController 中添加这个方法
-    /**
-     * 统一处理博客的创建和更新
-     */
     @PostMapping("/save")
     public String saveBlog(
             @RequestParam(required = false) Integer blogId,
@@ -324,7 +296,6 @@ public class BlogController {
             HttpSession session,
             RedirectAttributes redirectAttributes) {
 
-        // 检查登录状态
         User user = (User) session.getAttribute("user");
         if (user == null) {
             redirectAttributes.addFlashAttribute("error", "当前用户未登录!");
@@ -333,11 +304,9 @@ public class BlogController {
 
         try {
             if (blogId == null) {
-                // 创建新博客
                 blogService.createBlog(title, content, user.getUserId());
                 redirectAttributes.addFlashAttribute("message", "博客创建成功!");
             } else {
-                // 更新现有博客
                 blogService.updateBlog(blogId, title, content, user.getUserId());
                 redirectAttributes.addFlashAttribute("message", "博客更新成功!");
             }
@@ -348,7 +317,6 @@ public class BlogController {
             redirectAttributes.addFlashAttribute("title", title);
             redirectAttributes.addFlashAttribute("content", content);
 
-            // 重定向回编辑页面
             if (blogId == null) {
                 return "redirect:/blog/edit";
             } else {
@@ -357,19 +325,11 @@ public class BlogController {
         }
     }
 
-    // ========== 额外的便捷方法 ==========
-
-    /**
-     * 首页重定向
-     */
     @GetMapping("")
     public String index() {
         return "redirect:/blog/list";
     }
 
-    /**
-     * REST API：获取用户博客总数
-     */
     @GetMapping("/api/user/{userId}/count")
     @ResponseBody
     public String getUserBlogCount(@PathVariable Integer userId) throws Exception {

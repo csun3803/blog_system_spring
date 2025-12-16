@@ -26,15 +26,10 @@ public class AuthorController {
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
-    /**
-     * 根据博客ID获取作者信息
-     * 对应原GET /authorInfo?blogId=xxx
-     */
     @GetMapping("/info")
     public Map<String, Object> getAuthorInfo(@RequestParam(value = "blogId") Integer blogId) {
         Map<String, Object> response = new HashMap<>();
 
-        // 参数验证
         if (blogId == null) {
             response.put("ok", false);
             response.put("reason", "参数缺失!");
@@ -42,7 +37,6 @@ public class AuthorController {
         }
 
         try {
-            // 查找博客
             Blog blog = blogService.getBlogById(blogId);
             if (blog == null) {
                 response.put("ok", false);
@@ -50,7 +44,6 @@ public class AuthorController {
                 return response;
             }
 
-            // 查找作者
             User author = userService.selectById(blog.getUserId());
             if (author == null) {
                 response.put("ok", false);
@@ -58,10 +51,8 @@ public class AuthorController {
                 return response;
             }
 
-            // 清除敏感信息
             author.setPassword("");
 
-            // 构建成功响应
             response.put("ok", true);
             response.put("author", author);
             response.put("blogId", blogId);
@@ -75,15 +66,11 @@ public class AuthorController {
         return response;
     }
 
-    /**
-     * 获取作者信息（包含博客统计）
-     */
     @GetMapping("/infoWithStats")
     public Map<String, Object> getAuthorInfoWithStats(@RequestParam Integer blogId) {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            // 获取作者基本信息
             Map<String, Object> authorInfo = getAuthorInfo(blogId);
             if (!Boolean.TRUE.equals(authorInfo.get("ok"))) {
                 return authorInfo;
@@ -92,10 +79,8 @@ public class AuthorController {
             User author = (User) authorInfo.get("author");
             Blog blog = blogService.getBlogById(blogId);
 
-            // 获取作者的博客统计
             Integer blogCount = blogService.getUserBlogCount(author.getUserId());
 
-            // 添加统计信息
             response.putAll(authorInfo);
             response.put("blogCount", blogCount);
             response.put("blogCreatedTime", blog.getFormattedPostTime());

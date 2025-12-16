@@ -16,7 +16,6 @@ public class User {
     @Column(name = "password")
     private String password;
 
-    // 保持与原项目完全一致
     public Integer getUserId() {
         return userId;
     }

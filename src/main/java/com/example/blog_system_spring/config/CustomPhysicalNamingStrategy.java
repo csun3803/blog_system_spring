@@ -8,13 +8,11 @@ public class CustomPhysicalNamingStrategy extends PhysicalNamingStrategyStandard
 
     @Override
     public Identifier toPhysicalColumnName(Identifier name, JdbcEnvironment context) {
-        // 完全保持原样，不进行任何转换
         return name;
     }
 
     @Override
     public Identifier toPhysicalTableName(Identifier name, JdbcEnvironment context) {
-        // 完全保持原样，不进行任何转换
         return name;
     }
 }

@@ -16,7 +16,6 @@ public class GlobalExceptionHandler {
                                         RedirectAttributes redirectAttributes) {
         redirectAttributes.addFlashAttribute("error", e.getMessage());
 
-        // 根据来源页面决定重定向到哪里
         String referer = request.getHeader("Referer");
         return "redirect:" + (referer != null ? referer : "/blog/list");
     }

@@ -23,12 +23,10 @@ public class Blog {
     @Column(name = "postTime")
     private LocalDateTime postTime;
 
-    // 构造函数
     public Blog() {
         this.postTime = LocalDateTime.now();
     }
 
-    // Getter和Setter（保持原项目字段名）
     public Integer getBlogId() {
         return blogId;
     }
@@ -69,16 +67,13 @@ public class Blog {
         this.postTime = postTime;
     }
 
-    // 兼容原项目的格式化时间方法
     public String getFormattedPostTime() {
         if (postTime == null) {
             return "";
         }
-        // 格式化成原项目一样的格式：yyyy-MM-dd HH:mm:ss
         return postTime.toString().replace("T", " ");
     }
 
-    // 可选：添加 toString() 方法便于调试
     @Override
     public String toString() {
         return "Blog{" +
