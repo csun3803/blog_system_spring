@@ -1,114 +1,73 @@
 package com.example.blog_system_spring.controller;
 
+import com.example.blog_system_spring.common.ApiResponse;
 import com.example.blog_system_spring.entity.User;
-import com.example.blog_system_spring.service.BlogService;
 import com.example.blog_system_spring.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.servlet.http.HttpSession;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-@Controller
+@RestController
+@RequestMapping("/api")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class AuthController {
 
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private BlogService blogService;
-
-
-    @GetMapping("/")
-    public String index() {
-        return "redirect:/login";
-    }
-
-    @GetMapping("/login")
-    public String loginPage(HttpSession session, Model model) {
-        User user = (User) session.getAttribute("user");
-        if (user != null) {
-            return "redirect:/blog/list";
-        }
-
-        if (!model.containsAttribute("error")) {
-            model.addAttribute("error", "");
-        }
-        return "auth/blog_login";
-    }
-
-    @GetMapping("/register")
-    public String registerPage(HttpSession session, Model model) {
-        // 如果已经登录，重定向到博客列表
-        User user = (User) session.getAttribute("user");
-        if (user != null) {
-            return "redirect:/blog/list";
-        }
-
-        if (!model.containsAttribute("error")) {
-            model.addAttribute("error", "");
-        }
-        return "auth/blog_register";
-    }
-
-    @PostMapping("/login")
-    public String login(
-            @RequestParam String username,
-            @RequestParam String password,
-            HttpSession session,
-            RedirectAttributes redirectAttributes) {
-
-        System.out.println("登录尝试 - 用户名: " + username + ", 密码: " + password);
-
-        if (username == null || username.trim().isEmpty() ||
-                password == null || password.trim().isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", "用户名或密码不能为空");
-            return "redirect:/login";
-        }
-
-        User user = userService.login(username, password);
-        if (user == null) {
-            redirectAttributes.addFlashAttribute("error", "用户名或密码错误");
-            return "redirect:/login";
-        }
-
-        User sessionUser = new User();
-        sessionUser.setUserId(user.getUserId());
-        sessionUser.setUsername(user.getUsername());
-        session.setAttribute("user", sessionUser);
-
-        System.out.println("登录成功 - 用户ID: " + user.getUserId());
-        return "redirect:/blog/list";
-    }
-
-    // ========== 注册处理 ==========
-
     /**
-     * 用户注册处理
+     * 用户登录
      */
-    @PostMapping("/register")
-    public String register(
+    @PostMapping("/login")
+    public ApiResponse<Map<String, Object>> login(
             @RequestParam String username,
             @RequestParam String password,
-            HttpSession session,
-            RedirectAttributes redirectAttributes) {
+            HttpSession session) {
 
         // 参数验证
         if (username == null || username.trim().isEmpty() ||
                 password == null || password.trim().isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", "用户名或密码不能为空");
-            return "redirect:/register";
+            return ApiResponse.error("用户名或密码不能为空");
+        }
+
+        // 验证用户
+        User user = userService.login(username, password);
+        if (user == null) {
+            return ApiResponse.error("用户名或密码错误");
+        }
+
+        // 登录成功，设置session
+        session.setAttribute("user", user);
+
+        // 返回用户信息（不包含密码）
+        Map<String, Object> userInfo = new HashMap<>();
+        userInfo.put("userId", user.getUserId());
+        userInfo.put("username", user.getUsername());
+
+        return ApiResponse.success("登录成功", userInfo);
+    }
+
+    /**
+     * 用户注册
+     */
+    @PostMapping("/register")
+    public ApiResponse<Map<String, Object>> register(
+            @RequestParam String username,
+            @RequestParam String password,
+            HttpSession session) {
+
+        // 参数验证
+        if (username == null || username.trim().isEmpty() ||
+                password == null || password.trim().isEmpty()) {
+            return ApiResponse.error("用户名或密码不能为空");
         }
 
         // 检查用户名是否可用
         if (!userService.isUsernameAvailable(username)) {
-            redirectAttributes.addFlashAttribute("error", "用户名已被占用");
-            return "redirect:/register";
+            return ApiResponse.error("用户名已被占用");
         }
 
         try {
@@ -116,41 +75,36 @@ public class AuthController {
             User user = userService.register(username, password);
 
             // 注册成功后自动登录
-            User sessionUser = new User();
-            sessionUser.setUserId(user.getUserId());
-            sessionUser.setUsername(user.getUsername());
-            session.setAttribute("user", sessionUser);
+            session.setAttribute("user", user);
 
-            return "redirect:/blog/list";
+            // 返回用户信息
+            Map<String, Object> userInfo = new HashMap<>();
+            userInfo.put("userId", user.getUserId());
+            userInfo.put("username", user.getUsername());
+
+            return ApiResponse.success("注册成功", userInfo);
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "注册失败: " + e.getMessage());
-            return "redirect:/register";
+            return ApiResponse.error("注册失败: " + e.getMessage());
         }
     }
-
-    // ========== 注销处理 ==========
 
     /**
      * 用户注销
      */
     @GetMapping("/logout")
-    public String logout(HttpSession session, RedirectAttributes redirectAttributes) {
+    public ApiResponse<String> logout(HttpSession session) {
         if (session != null) {
             session.removeAttribute("user");
             session.invalidate();
-            redirectAttributes.addFlashAttribute("message", "已成功注销");
         }
-        return "redirect:/login";
+        return ApiResponse.success("已成功注销", null);
     }
 
-    // ========== 其他方法 ==========
-
     /**
-     * 检查用户是否登录（JSON API）
+     * 检查用户是否登录
      */
-    @GetMapping("/api/user/status")
-    @ResponseBody
-    public Map<String, Object> checkUserStatus(HttpSession session) {
+    @GetMapping("/user/status")
+    public ApiResponse<Map<String, Object>> checkUserStatus(HttpSession session) {
         Map<String, Object> result = new HashMap<>();
 
         User user = (User) session.getAttribute("user");
@@ -162,6 +116,6 @@ public class AuthController {
             result.put("loggedIn", false);
         }
 
-        return result;
+        return ApiResponse.success(result);
     }
 }

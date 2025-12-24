@@ -17,12 +17,21 @@ public class BlogService {
     @Autowired
     private BlogRepository blogRepository;
 
+    // ========== 对应原BlogServlet的doGet方法 ==========
 
-    public List<Blog> getAllBlogsForList() {
+    /**
+     * 获取所有博客列表（用于列表页显示，带内容截取）
+     * 对应原BlogServlet.doGet()中不带blogId参数的情况
+     */
+    public List<Blog> getAllBlogs() {
         // 这里直接使用 JPA 的方法，它会自动使用正确的列名
         return blogRepository.findAllByOrderByPostTimeDesc();
     }
 
+    /**
+     * 根据ID获取单个博客详情（完整内容）
+     * 对应原BlogServlet.doGet()中带blogId参数的情况
+     */
     public Blog getBlogById(Integer blogId) {
         if (blogId == null) {
             return null;
@@ -31,6 +40,12 @@ public class BlogService {
         return blog.orElse(null);
     }
 
+    // ========== 对应原BlogServlet的doPost方法 ==========
+
+    /**
+     * 创建新博客
+     * 对应原BlogServlet.doPost()
+     */
     @Transactional
     public Blog createBlog(String title, String content, Integer userId) {
         // 参数验证（与原Servlet一致）
@@ -49,6 +64,12 @@ public class BlogService {
         return blogRepository.save(blog);
     }
 
+    // ========== 对应原BlogDeleteServlet的doGet方法 ==========
+
+    /**
+     * 删除博客（带权限检查）
+     * 对应原BlogDeleteServlet.doGet()
+     */
     @Transactional
     public boolean deleteBlog(Integer blogId, Integer userId) {
         // 参数验证
@@ -77,6 +98,12 @@ public class BlogService {
         }
     }
 
+    // ========== 对应原BlogUpdateServlet的doGet/doPost方法 ==========
+
+    /**
+     * 获取要编辑的博客（带权限检查）
+     * 对应原BlogUpdateServlet.doGet()
+     */
     public Blog getBlogForEdit(Integer blogId, Integer userId) {
         if (blogId == null) {
             throw new IllegalArgumentException("当前blogId参数不对!");
@@ -95,6 +122,10 @@ public class BlogService {
         return blog;
     }
 
+    /**
+     * 更新博客
+     * 对应原BlogUpdateServlet.doPost()
+     */
     @Transactional
     public Blog updateBlog(Integer blogId, String title, String content, Integer userId) {
         // 参数验证
@@ -117,6 +148,11 @@ public class BlogService {
         return blogRepository.save(existingBlog);
     }
 
+    // ========== 辅助方法 ==========
+
+    /**
+     * 处理博客列表内容截取（与原BlogDao.selectAll()逻辑一致）
+     */
     private List<Blog> processBlogsForList(List<Blog> blogs) {
         List<Blog> result = new ArrayList<>();
 
@@ -140,10 +176,18 @@ public class BlogService {
         return result;
     }
 
+    // ========== 其他统计方法 ==========
+
+    /**
+     * 获取用户博客总数
+     */
     public Integer getUserBlogCount(Integer userId) {
         return blogRepository.countByUserId(userId);
     }
 
+    /**
+     * 获取用户的所有博客
+     */
     public List<Blog> getBlogsByUser(Integer userId) {
         return blogRepository.findByUserIdOrderByPostTimeDesc(userId);
     }
